@@ -16,6 +16,7 @@ env/
 # Local files
 temp_uploads/
 Reports/
+Archive/
 *.pdf
 *.csv
 

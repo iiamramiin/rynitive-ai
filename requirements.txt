@@ -1,8 +1,8 @@
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
 python-multipart==0.0.6
-presidio-analyzer==2.2.33
-spacy==3.5.0
+presidio-analyzer==2.2.351
+spacy==3.7.2
 pandas==2.1.4
 reportlab==4.0.7
 python-dotenv==1.0.0
