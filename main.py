@@ -5,7 +5,7 @@ FastAPI backend with Stripe payment and email delivery
 
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 import os
 import uuid
 import pandas as pd
@@ -179,7 +179,7 @@ async def create_checkout(
                 'quantity': 1,
             }],
             mode='payment',
-            success_url=SUCCESS_URL + '?session_id={CHECKOUT_SESSION_ID}',
+            success_url='https://web-production-d94542.up.railway.app/scan?session_id={CHECKOUT_SESSION_ID}',
             cancel_url=CANCEL_URL,
             customer_email=email,
             metadata={
@@ -258,6 +258,62 @@ async def stripe_webhook(request: Request):
     
     return JSONResponse({"status": "success"})
 
+@app.get("/scan")
+async def scan_after_payment(session_id: str):
+    """
+    Handle redirect after successful payment
+    Verify payment and process the file
+    """
+    
+    logger.info(f"Scan request with session: {session_id}")
+    
+    try:
+        # Retrieve the session from Stripe
+        session = stripe.checkout.Session.retrieve(session_id)
+        
+        # Check if payment was successful
+        if session.payment_status != 'paid':
+            raise HTTPException(status_code=400, detail="Payment not completed")
+        
+        # Get metadata
+        file_path = session.metadata.get('file_path')
+        filename = session.metadata.get('filename')
+        email = session.metadata.get('email')
+        
+        if not all([file_path, filename, email]):
+            raise HTTPException(status_code=400, detail="Missing file information")
+        
+        # Process the file
+        await process_and_send_report(
+            file_path=Path(file_path),
+            filename=filename,
+            email=email
+        )
+        
+        # Return success page (HTML)
+        return HTMLResponse(content="""
+        <html>
+        <body style="font-family: Arial; text-align: center; padding: 50px;">
+            <h1 style="color: #10b981;">✓ Payment Successful!</h1>
+            <p style="font-size: 1.2em;">Your CSV is being analyzed...</p>
+            <p>You'll receive your report via email in 30-60 seconds.</p>
+            <p style="margin-top: 40px;">
+                <a href="/" style="color: #8b5cf6; text-decoration: none;">← Back to Home</a>
+            </p>
+        </body>
+        </html>
+        """
+        
+    except Exception as e:
+        logger.error(f"Error in scan endpoint: {e}")
+        return HTMLResponse(content="""
+        <html>
+        <body style="font-family: Arial; text-align: center; padding: 50px;">
+            <h1 style="color: #ef4444;">Error Processing Request</h1>
+            <p>Please contact support@rynitive.ai</p>
+        </body>
+        </html>
+        """
 
 async def process_and_send_report(file_path: Path, filename: str, email: str):
     """
