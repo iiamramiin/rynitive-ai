@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 import logging
 from datetime import datetime
 import tempfile
+import base64
 
 # Import our scanner and report generator
 from scanner_enhanced import ShareabilityScanner
@@ -358,9 +359,9 @@ def send_report_email(to_email: str, filename: str, pdf_path: str, readiness_lev
     Send PDF report via email using Resend
     """
     
-    # Read PDF file
+    # Read PDF file and encode
     with open(pdf_path, 'rb') as f:
-        pdf_content = f.read()
+        pdf_content = base64.b64encode(f.read()).decode('utf-8')  # ✅ Base64 string!
     
     # Determine subject line based on readiness
     subject_suffix = {
@@ -427,7 +428,7 @@ def send_report_email(to_email: str, filename: str, pdf_path: str, readiness_lev
             "html": html_body,
             "attachments": [{
                 "filename": f"shareability_report_{datetime.now().strftime('%Y%m%d')}.pdf",
-                "content": pdf_content
+                "content": pdf_content  # ✅ Now it's a string!
             }]
         })
         
