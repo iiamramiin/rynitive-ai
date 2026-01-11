@@ -299,7 +299,7 @@ async def scan_after_payment(session_id: str):
             <p style="font-size: 1.2em;">Your CSV is being analyzed...</p>
             <p>You'll receive your report via email in 30-60 seconds.</p>
             <p style="margin-top: 40px;">
-                <a href="/" style="color: #8b5cf6; text-decoration: none;">← Back to Home</a>
+                <a href="https://rynitive.com" style="color: #8b5cf6; text-decoration: none;">← Back to Home</a>
             </p>
         </body>
         </html>
