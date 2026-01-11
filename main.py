@@ -302,7 +302,7 @@ async def scan_after_payment(session_id: str):
             </p>
         </body>
         </html>
-        """
+        """)
         
     except Exception as e:
         logger.error(f"Error in scan endpoint: {e}")
@@ -313,7 +313,7 @@ async def scan_after_payment(session_id: str):
             <p>Please contact support@rynitive.ai</p>
         </body>
         </html>
-        """
+        """)
 
 async def process_and_send_report(file_path: Path, filename: str, email: str):
     """
