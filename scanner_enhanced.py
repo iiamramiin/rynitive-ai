@@ -291,10 +291,14 @@ class ShareabilityScanner:
             import re
             whitelist_patterns = [
                 r'^P\d{3,4}$',          # Product IDs: P001, P1234
+                r'^PAT\d{3,4}$',        # Patient IDs: PAT001, PAT123 (pseudonymized)
                 r'^SUP-\d{4}-[A-Z]$',   # Supplier codes: SUP-2024-A
                 r'^WH-\w+$',            # Warehouse codes: WH-North
                 r'^\d+x\d+x\d+$',       # Dimensions: 30x20x15
                 r'^\$[\d,]+\.?\d*$',    # Money: $1,234.56
+                r'^[A-Z]\d{2,3}(\.\d+)?$',  # Medical codes: J45.9, E11.9, I10 (ICD-10)
+                r'^CPT-?\d{4,5}$',      # CPT codes
+                r'^\d{5}-\d{4}$',       # Procedure codes with dashes
             ]
             
             for pattern in whitelist_patterns:
@@ -313,9 +317,9 @@ class ShareabilityScanner:
             # Get all findings
             findings = self.analyzer.analyze(text=text_str, language='en')
             
-            # Filter by confidence score (0.7 = 70% confidence minimum)
-            # This dramatically reduces false positives while keeping true PII
-            filtered_findings = [f for f in findings if f.score >= 0.7]
+            # Filter by confidence score (0.75 = 75% confidence minimum)
+            # Higher threshold reduces false positives while keeping true PII
+            filtered_findings = [f for f in findings if f.score >= 0.75]
             
             return filtered_findings
         except Exception as e:
@@ -543,4 +547,3 @@ def test_scanner():
 
 if __name__ == "__main__":
     test_scanner()
-

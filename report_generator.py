@@ -77,8 +77,9 @@ def generate_report(scan_results: dict) -> str:
     logo_path = Path(__file__).resolve().parent / "rynitive_logo.png"
     
     if logo_path.exists():
-        # Use actual logo image
-        logo_img = Image(str(logo_path), width=0.5*inch, height=0.5*inch)
+        # Use actual logo image - maintain aspect ratio
+        # Original logo is ~2:1 ratio (landscape)
+        logo_img = Image(str(logo_path), width=1.2*inch, height=0.5*inch)
         story.append(logo_img)
     else:
         # Fallback: just use brand name without emoji
