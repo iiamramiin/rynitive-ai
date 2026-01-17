@@ -6,11 +6,9 @@ Uses ReportLab instead of WeasyPrint (works on all platforms)
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak, Image
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
-from reportlab.graphics.shapes import Drawing, Rect, Circle, Polygon
-from reportlab.graphics import renderPDF
 from datetime import datetime
 import os
 from pathlib import Path
@@ -72,26 +70,17 @@ def generate_report(scan_results: dict) -> str:
         fontName='Helvetica-Bold'
     )
     
-    # Create shield logo function
-    def create_shield_logo():
-        d = Drawing(40, 40)
-        # Shield outline
-        shield = Polygon(points=[
-            20, 5,    # Top
-            35, 12,   # Right top
-            35, 25,   # Right mid
-            20, 38,   # Bottom
-            5, 25,    # Left mid
-            5, 12,    # Left top
-        ])
-        shield.fillColor = colors.HexColor('#7c3aed')
-        shield.strokeColor = colors.HexColor('#6d28d9')
-        shield.strokeWidth = 2
-        d.add(shield)
-        return d
-    
-    # Add logo and brand name
-    story.append(create_shield_logo())
+    # Logo and brand name
+    logo_text_style = ParagraphStyle(
+        'LogoText',
+        parent=styles['Normal'],
+        fontSize=24,
+        textColor=colors.HexColor('#7c3aed'),
+        spaceAfter=0,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    story.append(Paragraph("🛡️", logo_text_style))
     story.append(Paragraph("Rynitive", brand_style))
     story.append(Spacer(1, 0.1*inch))
     
@@ -170,38 +159,42 @@ def generate_report(scan_results: dict) -> str:
         story.append(Spacer(1, 0.1*inch))
     story.append(Spacer(1, 0.2*inch))
     
-    # Risky Columns
-    if scan_results.get('risky_columns'):
+    # Risky Columns - only show if actual PII was detected
+    if scan_results.get('risky_columns') and scan_results.get('pii_count', 0) > 0:
         story.append(Paragraph("Risky Columns Detected", heading_style))
         
         col_data = [['Column Name', 'PII Types', 'Instances', '% Affected']]
         for col, data in scan_results.get('pii_by_column', {}).items():
-            pii_types = ', '.join(data.get('pii_types', {}).keys()) if data.get('pii_types') else 'Quasi-identifier'
-            col_data.append([
-                col,
-                pii_types[:40] + '...' if len(pii_types) > 40 else pii_types,
-                str(data.get('pii_count', 0)),
-                f"{data.get('percentage_with_pii', 0):.1f}%"
-            ])
+            # Only include columns that actually have PII instances
+            if data.get('pii_count', 0) > 0:
+                pii_types = ', '.join(data.get('pii_types', {}).keys()) if data.get('pii_types') else 'Quasi-identifier'
+                col_data.append([
+                    col,
+                    pii_types[:40] + '...' if len(pii_types) > 40 else pii_types,
+                    str(data.get('pii_count', 0)),
+                    f"{data.get('percentage_with_pii', 0):.1f}%"
+                ])
         
-        col_table = Table(col_data, colWidths=[2*inch, 2.5*inch, 1*inch, 1*inch])
-        col_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#7c3aed')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 11),
-            ('FONTSIZE', (0, 1), (-1, -1), 9),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e5e7eb')),
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f9fafb')])
-        ]))
-        story.append(col_table)
-        story.append(Spacer(1, 0.3*inch))
+        # Only create table if we have data rows beyond the header
+        if len(col_data) > 1:
+            col_table = Table(col_data, colWidths=[2*inch, 2.5*inch, 1*inch, 1*inch])
+            col_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#7c3aed')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e5e7eb')),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f9fafb')])
+            ]))
+            story.append(col_table)
+            story.append(Spacer(1, 0.3*inch))
     
-    # Quasi-Identifiers
-    if scan_results.get('quasi_identifiers'):
+    # Quasi-Identifiers - only show for YELLOW/RED reports
+    if scan_results.get('quasi_identifiers') and scan_results.get('readiness_level') != 'GREEN':
         story.append(Paragraph("Quasi-Identifiers", heading_style))
         story.append(Paragraph("These columns can be combined to re-identify individuals:", normal_style))
         for col in scan_results['quasi_identifiers']:
