@@ -416,18 +416,18 @@ class ShareabilityScanner:
         """
         Calculate RED/YELLOW/GREEN readiness level
         """
-        # RED: Direct identifiers found
-        if results['direct_identifier_columns']:
+        # RED: Direct identifiers found (must have actual PII detected, not just column name hints)
+        if results['direct_identifier_columns'] and results['pii_count'] > 0:
             return 'RED'
         
         # YELLOW: Multiple quasi-identifiers or high combo uniqueness
-        if len(results['quasi_identifiers']) >= 2:
+        if len(results['quasi_identifiers']) >= 3:  # Changed from 2 to 3 to reduce false positives
             return 'YELLOW'
         
         if results['combo_uniqueness_ratio'] and results['combo_uniqueness_ratio'] > 0.7:
             return 'YELLOW'
         
-        if len(results['high_uniqueness_columns']) >= 2:
+        if len(results['high_uniqueness_columns']) >= 3:  # Changed from 2 to 3
             return 'YELLOW'
         
         # GREEN: Low risk

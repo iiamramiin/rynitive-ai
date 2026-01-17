@@ -6,9 +6,11 @@ Uses ReportLab instead of WeasyPrint (works on all platforms)
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak, Image
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.graphics.shapes import Drawing, Rect, Circle, Polygon
+from reportlab.graphics import renderPDF
 from datetime import datetime
 import os
 from pathlib import Path
@@ -70,18 +72,27 @@ def generate_report(scan_results: dict) -> str:
         fontName='Helvetica-Bold'
     )
     
-    # Logo placeholder and brand name
-    logo_style = ParagraphStyle(
-        'LogoStyle',
-        parent=styles['Normal'],
-        fontSize=20,
-        textColor=colors.HexColor('#7c3aed'),
-        spaceAfter=0,
-        alignment=TA_CENTER,
-        fontName='Helvetica-Bold'
-    )
-    story.append(Paragraph("●", logo_style))  # Simple bullet as logo
-    story.append(Paragraph("Rynitive Checker", brand_style))
+    # Create shield logo function
+    def create_shield_logo():
+        d = Drawing(40, 40)
+        # Shield outline
+        shield = Polygon(points=[
+            20, 5,    # Top
+            35, 12,   # Right top
+            35, 25,   # Right mid
+            20, 38,   # Bottom
+            5, 25,    # Left mid
+            5, 12,    # Left top
+        ])
+        shield.fillColor = colors.HexColor('#7c3aed')
+        shield.strokeColor = colors.HexColor('#6d28d9')
+        shield.strokeWidth = 2
+        d.add(shield)
+        return d
+    
+    # Add logo and brand name
+    story.append(create_shield_logo())
+    story.append(Paragraph("Rynitive", brand_style))
     story.append(Spacer(1, 0.1*inch))
     
     # Main title
