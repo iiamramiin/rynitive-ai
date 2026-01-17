@@ -6,7 +6,7 @@ Uses ReportLab instead of WeasyPrint (works on all platforms)
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak, Image
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from datetime import datetime
@@ -73,16 +73,17 @@ def generate_report(scan_results: dict) -> str:
     )
     
     # Logo and brand name
-    logo_text_style = ParagraphStyle(
-        'LogoText',
-        parent=styles['Normal'],
-        fontSize=32,
-        textColor=colors.HexColor('#7c3aed'),
-        spaceAfter=5,
-        alignment=TA_CENTER,
-        fontName='Helvetica-Bold'
-    )
-    story.append(Paragraph("🛡", logo_text_style))
+    # Try to load logo image, fall back to text if not found
+    logo_path = Path(__file__).resolve().parent / "rynitive_logo.png"
+    
+    if logo_path.exists():
+        # Use actual logo image
+        logo_img = Image(str(logo_path), width=0.5*inch, height=0.5*inch)
+        story.append(logo_img)
+    else:
+        # Fallback: just use brand name without emoji
+        pass
+    
     story.append(Paragraph("Rynitive Checker", brand_style))
     story.append(Spacer(1, 0.1*inch))
     
