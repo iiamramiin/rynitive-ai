@@ -280,8 +280,38 @@ class ShareabilityScanner:
         Analyze text with Presidio, with error handling and confidence filtering
         """
         try:
+            # Whitelist: Skip obvious non-PII patterns
+            text_str = str(text).strip()
+            
+            # Skip empty or very short strings
+            if len(text_str) < 3:
+                return []
+            
+            # Whitelist patterns that look like PII but aren't
+            import re
+            whitelist_patterns = [
+                r'^P\d{3,4}$',          # Product IDs: P001, P1234
+                r'^SUP-\d{4}-[A-Z]$',   # Supplier codes: SUP-2024-A
+                r'^WH-\w+$',            # Warehouse codes: WH-North
+                r'^\d+x\d+x\d+$',       # Dimensions: 30x20x15
+                r'^\$[\d,]+\.?\d*$',    # Money: $1,234.56
+            ]
+            
+            for pattern in whitelist_patterns:
+                if re.match(pattern, text_str):
+                    return []  # Skip this value entirely
+            
+            # Skip common non-PII words that trigger false positives
+            non_pii_words = {
+                'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'purple',
+                'wood', 'metal', 'plastic', 'glass', 'ceramic', 'cotton', 'steel',
+                'package', 'multicolor', 'silver', 'gold', 'brown', 'gray', 'grey'
+            }
+            if text_str.lower() in non_pii_words:
+                return []
+            
             # Get all findings
-            findings = self.analyzer.analyze(text=text, language='en')
+            findings = self.analyzer.analyze(text=text_str, language='en')
             
             # Filter by confidence score (0.7 = 70% confidence minimum)
             # This dramatically reduces false positives while keeping true PII

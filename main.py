@@ -299,7 +299,7 @@ async def scan_after_payment(session_id: str):
             <p style="font-size: 1.2em;">Your CSV is being analyzed...</p>
             <p>You'll receive your report via email in 30-60 seconds.</p>
             <p style="margin-top: 40px;">
-                <a href="/" style="color: #8b5cf6; text-decoration: none;">← Back to Home</a>
+                <a href="https://rynitive.com" style="color: #8b5cf6; text-decoration: none;">← Back to Home</a>
             </p>
         </body>
         </html>
@@ -379,7 +379,7 @@ def send_report_email(to_email: str, filename: str, pdf_path: str, readiness_lev
         <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #7c3aed;">Your Shareability Report is Ready!</h1>
             
-            <p>Thank you for using Rynitive. We've analyzed your dataset <strong>{filename}</strong>.</p>
+            <p>Thank you for using Rynitive Checker. We've analyzed your dataset <strong>{filename}</strong>.</p>
             
             <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h2 style="margin-top: 0;">Quick Summary</h2>

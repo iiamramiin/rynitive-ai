@@ -71,7 +71,16 @@ def generate_report(scan_results: dict) -> str:
     )
     
     # Logo placeholder and brand name
-    story.append(Paragraph("( )", brand_style))  # Logo placeholder - you can replace with actual logo later
+    logo_style = ParagraphStyle(
+        'LogoStyle',
+        parent=styles['Normal'],
+        fontSize=20,
+        textColor=colors.HexColor('#7c3aed'),
+        spaceAfter=0,
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    )
+    story.append(Paragraph("●", logo_style))  # Simple bullet as logo
     story.append(Paragraph("Rynitive Checker", brand_style))
     story.append(Spacer(1, 0.1*inch))
     
