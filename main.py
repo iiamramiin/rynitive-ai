@@ -299,7 +299,7 @@ async def scan_after_payment(session_id: str):
             <p style="font-size: 1.2em;">Your CSV is being analyzed...</p>
             <p>You'll receive your report via email in 30-60 seconds.</p>
             <p style="margin-top: 40px;">
-                <a href="https://rynitive.com" style="color: #8b5cf6; text-decoration: none;">← Back to Home</a>
+                <a href="/" style="color: #8b5cf6; text-decoration: none;">← Back to Home</a>
             </p>
         </body>
         </html>
@@ -311,7 +311,7 @@ async def scan_after_payment(session_id: str):
         <html>
         <body style="font-family: Arial; text-align: center; padding: 50px;">
             <h1 style="color: #ef4444;">Error Processing Request</h1>
-            <p>Please contact support@rynitive.ai</p>
+            <p>Please contact support@rynitive.com</p>
         </body>
         </html>
         """)
@@ -379,7 +379,7 @@ def send_report_email(to_email: str, filename: str, pdf_path: str, readiness_lev
         <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #7c3aed;">Your Shareability Report is Ready!</h1>
             
-            <p>Thank you for using Rynitive AI. We've analyzed your dataset <strong>{filename}</strong>.</p>
+            <p>Thank you for using Rynitive. We've analyzed your dataset <strong>{filename}</strong>.</p>
             
             <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <h2 style="margin-top: 0;">Quick Summary</h2>
@@ -405,14 +405,14 @@ def send_report_email(to_email: str, filename: str, pdf_path: str, readiness_lev
                 For regulated data (HIPAA/GDPR), please consult your compliance team before sharing.</p>
             </div>
             
-            <p>Questions? Reply to this email or contact us at <a href="mailto:support@rynitive.ai">support@rynitive.ai</a></p>
+            <p>Questions? Reply to this email or contact us at <a href="mailto:support@rynitive.com">support@rynitive.com</a></p>
             
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
             
             <p style="font-size: 0.9em; color: #6b7280;">
-                <strong>Rynitive AI - CSV Shareability Checker</strong><br>
+                <strong>Rynitive</strong><br>
                 Fast privacy scans for datasets<br>
-                <a href="https://rynitive.ai">rynitive.ai</a>
+                <a href="https://rynitive.com">rynitive.com</a>
             </p>
         </div>
     </body>
@@ -458,7 +458,7 @@ def send_error_email(to_email: str, filename: str, error_message: str):
             
             <p>Your payment has been processed. We'll investigate this issue and send you the report as soon as possible.</p>
             
-            <p>If you have questions, please contact <a href="mailto:support@rynitive.ai">support@rynitive.ai</a> 
+            <p>If you have questions, please contact <a href="mailto:support@rynitive.com">support@rynitive.com</a> 
             with your file name and this error message.</p>
             
             <p>We apologize for the inconvenience.</p>
@@ -466,8 +466,8 @@ def send_error_email(to_email: str, filename: str, error_message: str):
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
             
             <p style="font-size: 0.9em; color: #6b7280;">
-                <strong>Rynitive AI</strong><br>
-                <a href="https://rynitive.ai">rynitive.ai</a>
+                <strong>Rynitive</strong><br>
+                <a href="https://rynitive.com">rynitive.com</a>
             </p>
         </div>
     </body>
@@ -478,7 +478,7 @@ def send_error_email(to_email: str, filename: str, error_message: str):
         resend.Emails.send({
             "from": RESEND_FROM_EMAIL,
             "to": to_email,
-            "subject": "Error Processing Your CSV - Rynitive AI",
+            "subject": "Error Processing Your CSV - Rynitive",
             "html": html_body
         })
         logger.info(f"Error email sent to {to_email}")

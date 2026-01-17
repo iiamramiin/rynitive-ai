@@ -277,10 +277,17 @@ class ShareabilityScanner:
     
     def _analyze_text(self, text: str) -> list:
         """
-        Analyze text with Presidio, with error handling
+        Analyze text with Presidio, with error handling and confidence filtering
         """
         try:
-            return self.analyzer.analyze(text=text, language='en')
+            # Get all findings
+            findings = self.analyzer.analyze(text=text, language='en')
+            
+            # Filter by confidence score (0.7 = 70% confidence minimum)
+            # This dramatically reduces false positives while keeping true PII
+            filtered_findings = [f for f in findings if f.score >= 0.7]
+            
+            return filtered_findings
         except Exception as e:
             # Fail gracefully if Presidio chokes
             return []
