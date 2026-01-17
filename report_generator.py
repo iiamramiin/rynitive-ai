@@ -10,6 +10,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import os
 from pathlib import Path
 import time
@@ -20,8 +21,9 @@ def generate_report(scan_results: dict) -> str:
     Returns: path to generated PDF file
     """
     
-    # Create PDF filename
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Create PDF filename with PST timestamp
+    pst_now = datetime.now(ZoneInfo("America/Los_Angeles"))
+    timestamp = pst_now.strftime("%Y%m%d_%H%M%S")
     #output_path = f"/tmp/shareability_report_{timestamp}.pdf" if os.name != 'nt' else f"{os.environ['TEMP']}\\shareability_report_{timestamp}.pdf"
     # directory where this script lives
     BASE_DIR = Path(__file__).resolve().parent
@@ -63,7 +65,7 @@ def generate_report(scan_results: dict) -> str:
     brand_style = ParagraphStyle(
         'BrandStyle',
         parent=styles['Normal'],
-        fontSize=10,
+        fontSize=14,
         textColor=colors.HexColor('#7c3aed'),
         spaceAfter=5,
         alignment=TA_CENTER,
@@ -74,14 +76,14 @@ def generate_report(scan_results: dict) -> str:
     logo_text_style = ParagraphStyle(
         'LogoText',
         parent=styles['Normal'],
-        fontSize=24,
+        fontSize=32,
         textColor=colors.HexColor('#7c3aed'),
-        spaceAfter=0,
+        spaceAfter=5,
         alignment=TA_CENTER,
         fontName='Helvetica-Bold'
     )
-    story.append(Paragraph("🛡️", logo_text_style))
-    story.append(Paragraph("Rynitive", brand_style))
+    story.append(Paragraph("🛡", logo_text_style))
+    story.append(Paragraph("Rynitive Checker", brand_style))
     story.append(Spacer(1, 0.1*inch))
     
     # Main title
@@ -89,9 +91,12 @@ def generate_report(scan_results: dict) -> str:
     story.append(Spacer(1, 0.2*inch))
     
     # Header info
+    # Get current time in PST/PDT (Pacific Time)
+    pst_time = datetime.now(ZoneInfo("America/Los_Angeles"))
+    
     header_data = [
         ['Dataset:', scan_results['filename']],
-        ['Analyzed:', datetime.now().strftime("%B %d, %Y at %I:%M %p")],
+        ['Analyzed:', pst_time.strftime("%B %d, %Y at %I:%M %p %Z")],
         ['Size:', f"{scan_results['row_count']:,} rows × {scan_results['column_count']} columns"],
         ['PII Instances:', str(scan_results['pii_count'])]
     ]
