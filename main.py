@@ -522,18 +522,21 @@ async def receive_email(request: Request):
     try:
         data = await request.json()
         
+        # Resend webhook format
+        email_data = data.get('data', {})
+        
         # Forward to your Gmail
         resend.Emails.send({
             "from": "noreply@rynitive.com",
             "to": "iiamramiin@gmail.com",
-            "subject": f"Support: {data.get('subject', 'No Subject')}",
-            "html": f"<strong>From:</strong> {data.get('from')}<br><br>{data.get('html', data.get('text', ''))}"
+            "subject": f"Support: {email_data.get('subject', 'No Subject')}",
+            "html": f"<strong>From:</strong> {email_data.get('from', 'Unknown')}<br><strong>To:</strong> {email_data.get('to', '')}<br><br>{email_data.get('html', email_data.get('text', 'No content'))}"
         })
         
         return {"status": "received"}
     except Exception as e:
-        print(f"Webhook error: {e}")
-        return {"status": "error"}
+        logger.error(f"Webhook error: {e}")
+        return {"status": "error", "message": str(e)}
 
 
 if __name__ == "__main__":
