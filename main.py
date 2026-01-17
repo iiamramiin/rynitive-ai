@@ -17,6 +17,8 @@ import logging
 from datetime import datetime
 import tempfile
 import base64
+import resend
+
 
 # Import our scanner and report generator
 from scanner_enhanced import ShareabilityScanner
@@ -513,6 +515,25 @@ async def test_scan(file: UploadFile = File(...)):
         }
     finally:
         cleanup_temp_file(file_path)
+
+@app.post("/webhook/email")
+async def receive_email(request: Request):
+    """Handle incoming emails and forward to Gmail"""
+    try:
+        data = await request.json()
+        
+        # Forward to your Gmail
+        resend.Emails.send({
+            "from": "noreply@rynitive.com",
+            "to": "iiamramiin@gmail.com",
+            "subject": f"Support: {data.get('subject', 'No Subject')}",
+            "html": f"<strong>From:</strong> {data.get('from')}<br><br>{data.get('html', data.get('text', ''))}"
+        })
+        
+        return {"status": "received"}
+    except Exception as e:
+        print(f"Webhook error: {e}")
+        return {"status": "error"}
 
 
 if __name__ == "__main__":
