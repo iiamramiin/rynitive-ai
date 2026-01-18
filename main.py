@@ -521,50 +521,53 @@ async def receive_email(request: Request):
     """Handle incoming emails and forward to Gmail"""
     try:
         payload = await request.json()
+        logger.info(f"Webhook received: {payload.get('type')}")
         
-        # Log the full payload to see structure
-        logger.info(f"Webhook payload: {payload}")
+        email_data = payload.get('data', {})
+        email_id = email_data.get('email_id')
         
-        # Try different possible data structures
-        email_data = payload.get('data', payload)
+        if not email_id:
+            return {"status": "no_email_id"}
         
-        from_email = email_data.get('from', {})
-        if isinstance(from_email, dict):
-            from_address = from_email.get('email', 'Unknown')
+        # Fetch full email content from Resend
+        import requests
+        resend_api_key = os.getenv('RESEND_API_KEY')
+        
+        response = requests.get(
+            f"https://api.resend.com/emails/{email_id}",
+            headers={"Authorization": f"Bearer {resend_api_key}"}
+        )
+        
+        if response.status_code == 200:
+            full_email = response.json()
+            html_body = full_email.get('html', '')
+            text_body = full_email.get('text', '')
         else:
-            from_address = from_email
+            html_body = text_body = "Could not fetch email content"
         
-        to_email = email_data.get('to', [])
-        if isinstance(to_email, list) and len(to_email) > 0:
-            to_address = to_email[0].get('email', '') if isinstance(to_email[0], dict) else to_email[0]
-        else:
-            to_address = str(to_email)
-        
-        subject = email_data.get('subject', 'No Subject')
-        html_content = email_data.get('html', email_data.get('html_body', ''))
-        text_content = email_data.get('text', email_data.get('text_body', ''))
-        
-        # Forward to your Gmail
+        # Forward to Gmail
         resend.Emails.send({
             "from": "noreply@rynitive.com",
             "to": "iiamramiin@gmail.com",
-            "subject": f"Support: {subject}",
+            "subject": f"Support: {email_data.get('subject', 'No Subject')}",
             "html": f"""
                 <h3>New Support Email</h3>
-                <p><strong>From:</strong> {from_address}</p>
-                <p><strong>To:</strong> {to_address}</p>
-                <p><strong>Subject:</strong> {subject}</p>
+                <p><strong>From:</strong> {email_data.get('from')}</p>
+                <p><strong>To:</strong> {', '.join(email_data.get('to', []))}</p>
+                <p><strong>Subject:</strong> {email_data.get('subject')}</p>
                 <hr>
                 <h4>Message:</h4>
-                {html_content or text_content or '<p>No content</p>'}
+                {html_body or text_body or '<p>No content available</p>'}
             """
         })
         
-        return {"status": "received"}
+        return {"status": "forwarded"}
     except Exception as e:
         logger.error(f"Webhook error: {e}")
-        logger.error(f"Full error: {str(e)}")
         return {"status": "error", "message": str(e)}
+        
+        
+        
 
 
 if __name__ == "__main__":
