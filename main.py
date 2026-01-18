@@ -520,22 +520,50 @@ async def test_scan(file: UploadFile = File(...)):
 async def receive_email(request: Request):
     """Handle incoming emails and forward to Gmail"""
     try:
-        data = await request.json()
+        payload = await request.json()
         
-        # Resend webhook format
-        email_data = data.get('data', {})
+        # Log the full payload to see structure
+        logger.info(f"Webhook payload: {payload}")
+        
+        # Try different possible data structures
+        email_data = payload.get('data', payload)
+        
+        from_email = email_data.get('from', {})
+        if isinstance(from_email, dict):
+            from_address = from_email.get('email', 'Unknown')
+        else:
+            from_address = from_email
+        
+        to_email = email_data.get('to', [])
+        if isinstance(to_email, list) and len(to_email) > 0:
+            to_address = to_email[0].get('email', '') if isinstance(to_email[0], dict) else to_email[0]
+        else:
+            to_address = str(to_email)
+        
+        subject = email_data.get('subject', 'No Subject')
+        html_content = email_data.get('html', email_data.get('html_body', ''))
+        text_content = email_data.get('text', email_data.get('text_body', ''))
         
         # Forward to your Gmail
         resend.Emails.send({
             "from": "noreply@rynitive.com",
             "to": "iiamramiin@gmail.com",
-            "subject": f"Support: {email_data.get('subject', 'No Subject')}",
-            "html": f"<strong>From:</strong> {email_data.get('from', 'Unknown')}<br><strong>To:</strong> {email_data.get('to', '')}<br><br>{email_data.get('html', email_data.get('text', 'No content'))}"
+            "subject": f"Support: {subject}",
+            "html": f"""
+                <h3>New Support Email</h3>
+                <p><strong>From:</strong> {from_address}</p>
+                <p><strong>To:</strong> {to_address}</p>
+                <p><strong>Subject:</strong> {subject}</p>
+                <hr>
+                <h4>Message:</h4>
+                {html_content or text_content or '<p>No content</p>'}
+            """
         })
         
         return {"status": "received"}
     except Exception as e:
         logger.error(f"Webhook error: {e}")
+        logger.error(f"Full error: {str(e)}")
         return {"status": "error", "message": str(e)}
 
 
